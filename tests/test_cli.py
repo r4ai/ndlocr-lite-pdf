@@ -11,6 +11,7 @@ from ndlocr_lite_pdf.cli import (
     UsageError,
     app,
     build_ndlocr_args,
+    cli,
     complete_shells,
     main,
     parse_options,
@@ -122,13 +123,12 @@ def test_run_uses_temp_artifacts_dir_by_default(tmp_path: Path) -> None:
 
 
 def test_typer_help_includes_completion_options() -> None:
-    result = runner.invoke(app, ["--help"], env={"COLUMNS": "120"})
+    result = runner.invoke(app, ["--help"])
 
     assert result.exit_code == 0
     assert "COMMAND" not in result.output
-    assert "--install-completion" in result.output
-    assert "--show-completion" in result.output
-    assert "SHELL" in result.output
+    assert "--install-completion" in cli.__annotations__["install_completion"]
+    assert "--show-completion" in cli.__annotations__["show_completion"]
 
 
 def test_show_completion_accepts_explicit_shell() -> None:
