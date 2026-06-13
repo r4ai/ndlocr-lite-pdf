@@ -34,10 +34,22 @@ mise exec -- uv run ndlocr-lite-pdf input.pdf -o output.pdf --artifacts-dir ./oc
 - `--artifacts-dir`: txt/json/xml/vizなどの中間成果物を保存するディレクトリ。未指定時は一時ディレクトリを使い、PDFだけ残します
 - `--overwrite`: 既存の出力PDFを上書き
 
+## Shell completion
+
+Typerの補完機能を有効にできます。
+
+```bash
+mise exec -- uv run ndlocr-lite-pdf --install-completion zsh
+mise exec -- uv run ndlocr-lite-pdf --show-completion zsh
+```
+
 ## Development
 
 ```bash
 mise exec -- uv run pytest
+mise exec -- uv run ruff format --check .
+mise exec -- uv run ruff check .
+mise exec -- uv run ty check src tests scripts
 ```
 
 重いOCR本体を含む実行確認は、任意の小さなPDFで次を実行してください。
@@ -45,3 +57,12 @@ mise exec -- uv run pytest
 ```bash
 mise exec -- uv run ndlocr-lite-pdf sample.pdf -o sample_ocr.pdf --artifacts-dir ./ocr-artifacts
 ```
+
+実行可能バイナリはPyInstallerで生成します。
+
+```bash
+mise exec -- uv sync --group build
+mise exec -- uv run --group build python scripts/build_binary.py
+```
+
+`v*` タグをpushするとGitHub ActionsがLinux/macOS/Windowsでバイナリを作成し、GitHub Releaseへアップロードします。

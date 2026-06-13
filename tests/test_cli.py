@@ -1,17 +1,24 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
+from typer.testing import CliRunner
 
 from ndlocr_lite_pdf.cli import (
     CliOptions,
     UsageError,
+    app,
     build_ndlocr_args,
+    complete_shells,
+    main,
     parse_options,
     run,
     validate_options,
 )
+
+runner = CliRunner()
 
 
 def write_pdf(path: Path) -> None:
@@ -68,7 +75,17 @@ def test_default_output_path(tmp_path: Path) -> None:
     input_pdf = tmp_path / "sample.pdf"
     write_pdf(input_pdf)
 
-    options = parse_options([str(input_pdf)])
+    options = parse_options(
+        input_pdf=input_pdf,
+        output_pdf=None,
+        dpi=150.0,
+        device="cpu",
+        visible_text=False,
+        viz=False,
+        enable_tcy=False,
+        artifacts_dir=None,
+        overwrite=False,
+    )
 
     assert options.output_pdf == tmp_path / "sample_ocr.pdf"
 
@@ -94,11 +111,43 @@ def test_run_uses_temp_artifacts_dir_by_default(tmp_path: Path) -> None:
     write_pdf(input_pdf)
     seen_args: list[str] = []
 
-    def runner(args: list[str]) -> None:
+    def fake_runner(args: list[str]) -> None:
         seen_args.extend(args)
 
-    run(base_options(input_pdf, output_pdf), runner=runner)
+    run(base_options(input_pdf, output_pdf), runner=fake_runner)
 
     artifacts_dir = Path(seen_args[seen_args.index("--output") + 1])
     assert artifacts_dir.name.startswith("ndlocr-lite-pdf-")
     assert not artifacts_dir.exists()
+
+
+def test_typer_help_includes_completion_options() -> None:
+    result = runner.invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "COMMAND" not in result.output
+    assert "--install-completion" in result.output
+    assert "--show-completion" in result.output
+    assert "SHELL" in result.output
+
+
+def test_show_completion_accepts_explicit_shell() -> None:
+    result = runner.invoke(app, ["--show-completion", "zsh"])
+
+    assert result.exit_code == 0
+    assert "complete_zsh" in result.output
+    assert "compdef" in result.output
+
+
+def test_shell_completion_candidates() -> None:
+    assert complete_shells() == ["bash", "fish", "powershell", "pwsh", "zsh"]
+
+
+def test_typer_reports_usage_error(tmp_path: Path) -> None:
+    with (
+        pytest.raises(SystemExit) as exc_info,
+        patch("sys.argv", ["ndlocr-lite-pdf", str(tmp_path / "missing.pdf")]),
+    ):
+        main()
+
+    assert exc_info.value.code == 2
