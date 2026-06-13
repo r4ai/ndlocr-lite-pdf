@@ -122,7 +122,7 @@ def test_run_uses_temp_artifacts_dir_by_default(tmp_path: Path) -> None:
 
 
 def test_typer_help_includes_completion_options() -> None:
-    result = runner.invoke(app, ["--help"])
+    result = runner.invoke(app, ["--help"], env={"COLUMNS": "120"})
 
     assert result.exit_code == 0
     assert "COMMAND" not in result.output
