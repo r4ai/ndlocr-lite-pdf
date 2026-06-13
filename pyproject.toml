@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ndlocr-lite-pdf"
+version = "0.1.0"
+description = "PDF-focused CLI wrapper for NDLOCR-Lite searchable PDF OCR"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "r4ai" }]
+dependencies = [
+  "ndlocr-lite @ git+https://github.com/ndl-lab/ndlocr-lite@1.2.3",
+]
+
+[project.scripts]
+ndlocr-lite-pdf = "ndlocr_lite_pdf.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ndlocr_lite_pdf"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
